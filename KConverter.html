@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KConverter - KrutiDev 010 to Unicode</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f8;color:#222}
+header{background:#174a78;color:#fff;text-align:center;padding:24px 15px}
+header h1{margin:0;font-size:34px}header p{margin:7px 0 0}
+.wrap{max-width:1100px;margin:25px auto;padding:15px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.box{background:#fff;padding:18px;border-radius:12px;box-shadow:0 2px 10px #0001}
+label{display:block;font-weight:bold;font-size:18px;margin-bottom:10px}
+textarea{width:100%;height:300px;resize:vertical;padding:14px;border:1px solid #bbb;border-radius:8px;font-size:18px;line-height:1.6}
+#input{font-family:"Kruti Dev 010",Arial,sans-serif}.buttons{text-align:center;margin:22px 0}
+button{border:0;padding:12px 20px;margin:5px;border-radius:7px;cursor:pointer;font-weight:bold;font-size:16px}
+#convert{background:#174a78;color:white}#copy{background:#198754;color:white}#download{background:#6f42c1;color:white}#clear{background:#dc3545;color:white}
+button:hover{opacity:.85}.counter{text-align:right;color:#777;margin-top:6px;font-size:13px}
+footer{text-align:center;color:#666;padding:25px}@media(max-width:700px){.grid{grid-template-columns:1fr}button{width:90%}header h1{font-size:28px}}
+</style>
+</head>
+<body>
+<header><h1>KConverter</h1><p>KrutiDev 010 → Unicode Converter</p></header>
+<div class="wrap">
+<div class="grid">
+<div class="box"><label>KrutiDev 010 Text</label>
+<textarea id="input" placeholder="यहाँ KrutiDev 010 text paste करें..."></textarea>
+<div class="counter" id="inCount">0 characters</div></div>
+<div class="box"><label>Unicode Hindi</label>
+<textarea id="output" placeholder="Unicode result यहाँ दिखाई देगा..." readonly></textarea>
+<div class="counter" id="outCount">0 characters</div></div>
+</div>
+<div class="buttons">
+<button id="convert">🔄 Convert to Unicode</button>
+<button id="copy">📋 Copy</button>
+<button id="download">⬇ Download</button>
+<button id="clear">🗑 Clear</button>
+</div>
+</div>
+<footer>© 2026 KConverter<br>Created by <b>Kush</b></footer>
+<script>
+/* Complete mapping based on the open-source KrutiDev conversion algorithm. */
+const pairs = [
+["ñ","॰"],["Q+Z","QZ+"],["sas","sa"],["aa","a"],[")Z","र्द्ध"],["ZZ","Z"],
+["‘",'"'],["’",'"'],["“","'"],["”","'"],
+["å","०"],["ƒ","१"],["„","२"],["…","३"],["†","४"],["‡","५"],["ˆ","६"],["‰","७"],["Š","८"],["‹","९"],
+["¶+","फ़्"],["d+","क़"],["[+k","ख़"],["[+","ख़्"],["x+","ग़"],["T+","ज़्"],["t+","ज़"],["M+","ड़"],["<+","ढ़"],["Q+","फ़"],[";+","य़"],["j+","ऱ"],["u+","ऩ"],
+["Ùk","त्त"],["Ù","त्र"],["Dr","क्त"],["–","ड़"],["—","ढ़"],["é","न्न"],["™","्र"],["=kk","ॊ"],["f=k","त्रि"],
+["à","द्व"],["á","प्र"],["â","क्र"],["ã","ब्र"],["ºz","ग्र"],["º","्र"],["í","्व"],["{k","क्ष"],["{","क्ष्"],["=","्"],["«","द्ध"],
+["Nî","छ्र"],["Vî","ट्र"],["Bî","ठ्र"],["Mî","ड्र"],["<î","ढ़्र"],["|","ज्ञ"],["K","त्र"],["}","्र"],
+["J","रू"],["Vª","ट्र"],["Mª","ड्र"],["<ªª","ढ़्र"],["Nª","छ्र"],["Ø","द्र"],["Ý","्र"],["nzZ","र्द्र"],["æ","ध"],["ç","न"],["Á","प"],["xz","ग्र"],["#","्र"],[":","ः"],
+["v‚","ऑ"],["vks","ओ"],["vkS","औ"],["vk","आ"],["v","अ"],["b±","ईं"],["Ã","ई"],["bZ","ई"],["b","इ"],["m","उ"],["Å","ऊ"],[",s","ऐ"],[",","ए"],["_","ऋ"],
+["ô","क्क"],["d","क"],["Dk","का"],["D","क्"],["[k","ख"],["[","ख्"],["x","ग"],["Xk","गा"],["X","ग्"],["Ä","घ"],["?k","घ"],["?","ङ"],
+["³","ङ्"],["pkS","चौ"],["p","च"],["Pk","चा"],["P","च्"],["N","छ"],["t","ज"],["Tk","जा"],["T","ज्"],[">","झ"],["÷","झ्"],["¥","ञ"],
+["ê","ट"],["ë","ठ"],["V","ट"],["B","ठ"],["ì","ड"],["ï","ढ"],["M+","ड़"],["<+","ढ़"],["M","ड"],["<","ढ"],[".k","ण"],[".","ण्"],
+["r","त"],["Rk","ता"],["R","त्"],["Fk","था"],["F","थ्"],[")","द"],["n","द"],["/k","ध"],["èk","ध"],["/","ध्"],["Ë","ध"],["è","ध्"],["u","न"],["Uk","ना"],["U","न्"],
+["i","प"],["Ik","पा"],["I","प्"],["Q","फ"],["¶","फ्"],["c","ब"],["Ck","बा"],["C","ब्"],["Hk","भ"],["H","भ्"],["e","म"],["Ek","मा"],["E","म्"],
+[";","य"],["¸","य्"],["j","र"],["y","ल"],["Yk","ला"],["Y","ल्"],["o","व"],["Ok","वा"],["O","व्"],["'k","श"],["'","श्"],["\"","ष्"],["l","स"],["L","स्"],["g","ह"],["h","ी"],
+["k","ा"],["f","ि"],["q","ु"],["w","ू"],["`","ृ"],["s","े"],["S","ै"],["ks","ो"],["kS","ौ"],["a","ं"],["%","ः"],["¡","ँ"],["W","ॅ"],
+["_","ऋ"],["-","-"],["&","-"],["A","।"],["\\","?"],["@", "/"],["[", "ख्"]
+];
+
+function convertKrutiDev(input){
+  let s=input;
+  for(const [a,b] of pairs) s=s.split(a).join(b);
+  s=s.replace(/±/g,"Zं");
+  s=s.replace(/Æ/g,"र्f");
+  s=s.replace(/Ç/g,"fa");
+  s=s.replace(/É/g,"र्fa");
+  s=s.replace(/Ê/g,"ीZ");
+
+  // Move chhoti-i after the consonant/cluster.
+  let old;
+  do{
+    old=s;
+    s=s.replace(/f(.)/g,"$1ि");
+  }while(s!==old);
+
+  s=s.replace(/fa(.)/g,"$1िं");
+
+  // Move reph (Z) before the syllable.
+  const matras="अआइईउऊएऐओऔािीुूृेैोंंःँॅ";
+  let guard=0;
+  while(s.includes("Z") && guard++<10000){
+    const idx=s.indexOf("Z");
+    let p=idx-1;
+    while(p>=0 && matras.includes(s[p])) p--;
+    if(p<0){s=s.replace("Z","र्");continue;}
+    s=s.slice(0,p)+"र्"+s.slice(p,idx)+s.slice(idx+1);
+  }
+  s=s.replace(/ि्(.)/g,"्$1ि");
+  s=s.replace(/््/g,"्");
+  s=s.replace(/्र्/g,"र्");
+  s=s.replace(/्र्/g,"र्");
+  return s;
+}
+function update(){
+ document.getElementById("inCount").textContent=document.getElementById("input").value.length+" characters";
+ document.getElementById("outCount").textContent=document.getElementById("output").value.length+" characters";
+}
+document.getElementById("convert").onclick=()=>{
+ const t=document.getElementById("input").value;
+ if(!t.trim()){alert("पहले KrutiDev 010 text डालें।");return}
+ document.getElementById("output").value=convertKrutiDev(t);update();
+};
+document.getElementById("copy").onclick=()=>{
+ const t=document.getElementById("output").value;
+ if(!t){alert("पहले Convert करें।");return}
+ navigator.clipboard?.writeText(t).then(()=>alert("Unicode text copied!")).catch(()=>{
+  const o=document.getElementById("output");o.removeAttribute("readonly");o.select();document.execCommand("copy");o.setAttribute("readonly","readonly");alert("Copied!");
+ });
+};
+document.getElementById("download").onclick=()=>{
+ const t=document.getElementById("output").value;if(!t){alert("पहले Convert करें।");return}
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:"text/plain;charset=utf-8"}));a.download="KConverter-Unicode.txt";a.click();
+};
+document.getElementById("clear").onclick=()=>{document.getElementById("input").value="";document.getElementById("output").value="";update()};
+document.getElementById("input").addEventListener("input",update);
+</script>
+</body>
+</html>
